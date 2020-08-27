@@ -29,6 +29,7 @@ class Database:
         connection.close()
         return data
 
+    # ------ USERS TABLE FUNCS ------
     def create_table_users(self):
         sql = """
         CREATE TABLE Users (
@@ -36,6 +37,7 @@ class Database:
         user_id INTEGER NOT NULL,
         username varchar(255),
         full_name varchar(255),
+        promo varchar(255),
         referral INTEGER,
         balance int DEFAULT 0 NOT NULL
         );
@@ -53,6 +55,20 @@ class Database:
             self.execute(sql, parameters, commit=True)
         except Exception as e:
             print(e)
+
+    def set_promo(self, promo: str, user_id: int):
+        sql = "UPDATE Users SET promo = ? WHERE user_id = ?"
+        parameters = (promo, user_id)
+        return self.execute(sql, parameters, commit=True)
+
+    def get_promo(self, user_id: int):
+        parameters = (user_id,)
+        return self.execute("SELECT promo FROM Users WHERE user_id = ?", parameters, fetchone=True)
+
+    def check_promo(self, promo: str):
+        parameters = (promo,)
+        sql = "SELECT id FROM Users WHERE promo = ?"
+        return self.execute(sql, parameters, fetchone=True)
 
     def check_referrals(self, user_id: int):
         sql = "SELECT user_id FROM Users WHERE referral=(SELECT id FROM Users WHERE user_id = ?)"
@@ -86,6 +102,10 @@ class Database:
         sql, parameters = self.format_args(sql, kwargs)
         return self.execute(sql, parameters, fetchone=True)
 
+    def get_user_id(self, id: int):
+        parameters = (id,)
+        return self.execute("SELECT user_id FROM Users WHERE id = ?", parameters, fetchone=True)
+
     def get_id(self, user_id: int):
         parameters = (user_id,)
         return self.execute("SELECT id FROM Users WHERE user_id = ?", parameters, fetchone=True)
@@ -95,6 +115,11 @@ class Database:
 
     def delete_all_users(self):
         self.execute("DELETE FROM Users;", commit=True)
+
+    def delete_user(self, user_id: int):
+        parameters = (user_id,)
+        self.execute("DELETE FROM Users WHERE user_id = ?", parameters, commit=True)
+    # ------------
 
 
 def logger(statement):
