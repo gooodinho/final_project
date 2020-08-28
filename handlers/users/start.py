@@ -7,6 +7,7 @@ from keyboards.default.cancel_promo import cancel_menu
 from keyboards.inline.promo import send_promo
 from keyboards.inline.promo_callback import promo_callback
 from aiogram.dispatcher import FSMContext
+from utils.notify_admins import ref_notify
 from loader import dp, db, bot
 
 
@@ -69,6 +70,7 @@ async def bot_start(message: types.Message):
             ref_user_id = db.get_user_id(referral)[0]
             db.add_money(10, ref_user_id)
             # ADD ADMIN NOTIFY !!!!!!!!!
+            await ref_notify(dp, ref_user_id, f"У вас новый реферал, +10 монет!")
         except sqlite3.IntegrityError as err:
             print(err)
     bot_username = (await bot.get_me()).username

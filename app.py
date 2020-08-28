@@ -7,7 +7,7 @@ async def on_startup(dp):
     filters.setup(dp)
     middlewares.setup(dp)
 
-    from utils.notify_admins import on_startup_notify
+    from utils.notify_admins import admin_notify
     try:
         db.create_table_users()
     except Exception as e:
@@ -19,7 +19,7 @@ async def on_startup(dp):
 
     print(db.select_all_items())
     print(db.select_all_users())
-    await on_startup_notify(dp)
+    await admin_notify(dp, "Бот запущен!")
 
 
 if __name__ == '__main__':
