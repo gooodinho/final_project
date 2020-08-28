@@ -69,7 +69,6 @@ async def bot_start(message: types.Message):
             await message.answer("Добавлен в базу!")
             ref_user_id = db.get_user_id(referral)[0]
             db.add_money(10, ref_user_id)
-            # ADD ADMIN NOTIFY !!!!!!!!!
             await ref_notify(dp, ref_user_id, f"У вас новый реферал, +10 монет!")
         except sqlite3.IntegrityError as err:
             print(err)
