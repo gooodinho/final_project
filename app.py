@@ -12,6 +12,12 @@ async def on_startup(dp):
         db.create_table_users()
     except Exception as e:
         print(e)
+    try:
+        db.create_item_table()
+    except Exception as e:
+        print(e)
+
+    print(db.select_all_items())
     print(db.select_all_users())
     await on_startup_notify(dp)
 

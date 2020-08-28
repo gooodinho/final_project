@@ -120,7 +120,31 @@ class Database:
         parameters = (user_id,)
         self.execute("DELETE FROM Users WHERE user_id = ?", parameters, commit=True)
     # ------------
+    # ------ ITEM TABLE FUNCS ------
 
+    def create_item_table(self):
+        sql = """
+        CREATE TABLE Items (
+        id INTEGER PRIMARY KEY,
+        name varchar(255) NOT NULL,
+        photo varchar(255) NOT NULL,
+        description varchar(255),
+        price INTEGER NOT NULL
+        );
+        """
+        self.execute(sql, commit=True)
+
+    def add_item(self, name: str, photo: str, price: int, description: str = None):
+        parameters = (name, photo, description, price)
+        sql = "INSERT INTO Items(name, photo, description, price) VALUES (?, ?, ?, ?)"
+        try:
+            self.execute(sql, parameters, commit=True)
+        except Exception as e:
+            print(e)
+
+    def select_all_items(self):
+        sql = "SELECT * FROM Items"
+        return self.execute(sql, fetchall=True)
 
 def logger(statement):
     print(f"""
