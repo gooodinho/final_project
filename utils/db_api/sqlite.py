@@ -146,6 +146,21 @@ class Database:
         sql = "SELECT * FROM Items"
         return self.execute(sql, fetchall=True)
 
+    def select_all_items_abc(self):
+        sql = "SELECT * FROM Items ORDER BY name"
+        return self.execute(sql, fetchall=True)
+
+    def search_items(self, text):
+        sql = "SELECT * FROM Items WHERE name LIKE ?"
+        parameters = (text+'%',)
+        return self.execute(sql, parameters, fetchall=True)
+
+    def select_item(self, **kwargs):
+        sql = "SELECT * FROM Items WHERE "
+        sql, parameters = self.format_args(sql, kwargs)
+        return self.execute(sql, parameters, fetchone=True)
+
+
 def logger(statement):
     print(f"""
     Executing: {statement}

@@ -10,7 +10,9 @@ from utils.misc import rate_limit
 async def bot_help(message: types.Message):
     text = [
         'Список команд: ',
-        '/start - Начать диалог',
+        '/start - Перезапустить бота',
+        '/referrals - Посмотреть рефералов',
+        '/promo - Установить/показать промокод',
         '/help - Получить справку'
     ]
     await message.answer('\n'.join(text))

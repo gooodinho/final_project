@@ -1,3 +1,5 @@
+from asyncio import sleep
+
 from aiogram import types
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher import FSMContext
@@ -27,7 +29,7 @@ async def add_new_item(message: types.Message):
 @dp.message_handler(AdminFilter(), state=AddItem.Name)
 async def get_name(message: types.Message, state: FSMContext):
     name = message.text
-    await state.update_data(name=name)
+    await state.update_data(name=name.capitalize())
     await message.answer(f"Название товара: {name}\nПришлите фотографию товара:")
     await AddItem.Photo.set()
 
@@ -97,3 +99,17 @@ async def confirm(call: types.CallbackQuery, state: FSMContext):
     db.add_item(name, photo, price, description)
     await call.message.answer("Товар удачно создан", reply_markup=ReplyKeyboardRemove())
     await state.finish()
+
+
+@dp.message_handler(Command("items"), AdminFilter())
+async def show_all_items(message: types.Message):
+    all_items = db.select_all_items()
+    text = "<b>{name}</b>\n<i>{description}</i>\n<b>Цена:</b> \t{price:,}"
+    for item in all_items:
+        await message.answer_photo(
+            photo=item[2],
+            caption=text.format(name=item[1],
+                                description=item[3],
+                                price=item[4]/100)
+        )
+        await sleep(0.3)

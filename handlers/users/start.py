@@ -1,14 +1,47 @@
 import sqlite3
+
 from aiogram import types
 from aiogram.dispatcher.filters.builtin import CommandStart
 from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ReplyKeyboardRemove
+from aiogram.dispatcher import FSMContext
+from aiogram.utils.callback_data import CallbackData
+
+from handlers.users.inline import buy_item
+from loader import dp, db, bot
+
 from filters import AdminFilter
+
 from keyboards.default.cancel_promo import cancel_menu
 from keyboards.inline.promo import send_promo
 from keyboards.inline.promo_callback import promo_callback
-from aiogram.dispatcher import FSMContext
+
 from utils.notify_admins import ref_notify
-from loader import dp, db, bot
+
+buying_item = CallbackData("buy", "id")
+
+
+@dp.message_handler(CommandStart(deep_link="show"), state="showing")
+async def show_item(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    item_id = data.get("id")
+    item = db.select_item(id=item_id)
+    text = "<b>{name}</b>\n<i>{description}</i>\n<b>Цена:</b> \t{price:,}"
+    markup = types.InlineKeyboardMarkup(
+        inline_keyboard=[
+            [types.InlineKeyboardButton(
+                text="Купить",
+                callback_data=buying_item.new(id=id)
+            )]
+        ]
+    )
+    await message.answer_photo(
+            photo=item[2],
+            caption=text.format(name=item[1],
+                                description=item[3],
+                                price=item[4]/100),
+            reply_markup=markup
+    )
+    await state.finish()
 
 
 @dp.message_handler(CommandStart(), AdminFilter())
@@ -39,6 +72,7 @@ async def bot_start_admin(message: types.Message):
 
     Проверить рефералов можно по команде: /referrals
     Установить/показать промокод по команде: /promo
+    Добавить товар по команде: /add_item
 
     Ваш баланс: {balance} монет.
             """
@@ -57,6 +91,11 @@ async def bot_start(message: types.Message):
         # CHECK REFERRAL
         try:
             referral = message.get_args()
+            if referral == "connect_user":
+                await message.answer(
+                    "Чтобы использовать этого бота введите код приглашения, либо пройдите по реферальной ссылке",
+                    reply_markup=send_promo)
+                return
         except ValueError:
             await message.answer(
                 "Чтобы использовать этого бота введите код приглашения, либо пройдите по реферальной ссылке",
@@ -120,15 +159,3 @@ async def add_user_promo(message: types.Message, state: FSMContext):
         db.add_money(10, ref_user_id)
     await state.finish()
 
-# @dp.message_handler(CommandStart(deep_link="connect_user"))
-# async def connect_user(message: types.Message):
-#     allowed_users.append(message.from_user.id)
-#     await message.answer("Vu podkluchenu",
-#                          reply_markup=InlineKeyboardMarkup(
-#                              inline_keyboard=[
-#                                  [
-#                                  InlineKeyboardButton(text="Voiti v inline rejim",
-#                                                       switch_inline_query_current_chat="Zapros")
-#                                  ]
-#                              ]
-#                          ))
