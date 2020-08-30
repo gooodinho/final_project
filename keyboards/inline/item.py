@@ -13,3 +13,4 @@ def buy_keyboard(item_id):
             )]
         ]
     )
+    return keyboard
