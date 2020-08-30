@@ -3,7 +3,7 @@ from aiogram.types import CallbackQuery
 from aiogram.utils.callback_data import CallbackData
 from aiogram.dispatcher import FSMContext
 
-from loader import dp, db, bot
+from loader import dp, db
 
 show_item = CallbackData("show", "id")
 

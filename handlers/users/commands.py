@@ -1,12 +1,13 @@
 from aiogram import types
+from aiogram.types import ReplyKeyboardRemove, CallbackQuery
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher import FSMContext
 
 from keyboards.inline.promo_callback import promo_callback
 from keyboards.inline.promo import change_promo
-from loader import dp, db, bot
 from keyboards.default.cancel_promo import cancel_menu
-from aiogram.types import ReplyKeyboardRemove, CallbackQuery
+
+from loader import dp, db, bot
 
 
 @dp.message_handler(text="Отмена", state="set_promo")
@@ -55,7 +56,7 @@ async def cancel_action(message: types.Message, state: FSMContext):
 
 @dp.callback_query_handler(promo_callback.filter(command="change_promo"))
 async def chg_promo(call: CallbackQuery, state: FSMContext):
-    await call.answer(cache_time=2)
+    await call.answer(cache_time=5)
     await state.set_state("set_promo")
     await bot.send_message(chat_id=call.message.chat.id, text="Придумайте промокод и отправьте",
                            reply_markup=cancel_menu)

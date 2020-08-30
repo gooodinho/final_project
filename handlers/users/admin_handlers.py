@@ -3,9 +3,9 @@ from asyncio import sleep
 from aiogram import types
 from aiogram.dispatcher.filters import Command
 from aiogram.dispatcher import FSMContext
-from aiogram.types import ReplyKeyboardRemove, CallbackQuery
+from aiogram.types import ReplyKeyboardRemove
 
-from loader import dp, db, bot
+from loader import dp, db
 
 from keyboards.default.cancel_promo import cancel_menu
 
@@ -57,7 +57,6 @@ async def get_desc(message: types.Message, state: FSMContext):
 
 @dp.message_handler(AdminFilter(), state=AddItem.Price)
 async def get_price(message: types.Message, state: FSMContext):
-    # data = await state.get_data()
     try:
         price = int(message.text)
     except ValueError:
