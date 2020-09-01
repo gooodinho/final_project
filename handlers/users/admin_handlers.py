@@ -30,7 +30,7 @@ async def add_new_item(message: types.Message):
 async def get_name(message: types.Message, state: FSMContext):
     name = message.text
     await state.update_data(name=name.capitalize())
-    await message.answer(f"Название товара: {name}\nПришлите фотографию товара:")
+    await message.answer(f"Название товара: {name}\n\nПришлите фотографию товара:")
     await AddItem.Photo.set()
 
 
@@ -41,16 +41,24 @@ async def get_photo(message: types.Message, state: FSMContext):
     name = data.get("name")
     await message.answer_photo(
         photo=photo,
-        caption=f"Название: {name}\nПришлите описание товара"
+        caption=f"Название: {name}\n\nПришлите ссылку на фотографию товара, для отображения в инлайн режиме:"
     )
     await state.update_data(photo=photo)
+    await AddItem.Url.set()
+
+
+@dp.message_handler(AdminFilter(), state=AddItem.Url)
+async def get_url(message: types.Message, state: FSMContext):
+    url = message.text
+    await message.answer("Пришлите описание товара:")
+    await state.update_data(url=url)
     await AddItem.Description.set()
 
 
 @dp.message_handler(AdminFilter(), state=AddItem.Description)
 async def get_desc(message: types.Message, state: FSMContext):
     description = message.text
-    await message.answer(f"Описание: {description}\nПришлите цену товара в копейках")
+    await message.answer(f"Описание: {description}\n\nПришлите цену товара в копейках")
     await state.update_data(description=description)
     await AddItem.Price.set()
 
@@ -95,7 +103,8 @@ async def confirm(call: types.CallbackQuery, state: FSMContext):
     photo = data.get("photo")
     description = data.get("description")
     price = data.get("price")
-    db.add_item(name, photo, price, description)
+    url = data.get("url")
+    db.add_item(name, photo, price, description, url)
     await call.message.answer("Товар удачно создан", reply_markup=ReplyKeyboardRemove())
     await state.finish()
 
@@ -103,12 +112,13 @@ async def confirm(call: types.CallbackQuery, state: FSMContext):
 @dp.message_handler(Command("items"), AdminFilter())
 async def show_all_items(message: types.Message):
     all_items = db.select_all_items()
-    text = "<b>{name}</b>\n<i>{description}</i>\n<b>Цена:</b> \t{price:,}"
+    text = "<b>{name}</b>\n\n<i>{description}</i>\n\n<b>Цена:</b> \t{price:,}\n\nURL: {url}"
     for item in all_items:
         await message.answer_photo(
             photo=item[2],
             caption=text.format(name=item[1],
                                 description=item[3],
-                                price=item[4]/100)
+                                price=item[4]/100,
+                                url=item[5])
         )
         await sleep(0.3)

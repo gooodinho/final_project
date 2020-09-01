@@ -3,6 +3,8 @@ from aiogram.dispatcher.filters.builtin import CommandStart
 from aiogram.types import CallbackQuery, ReplyKeyboardRemove
 from aiogram.dispatcher import FSMContext
 
+from data.config import PROVIDER_TOKEN
+from data.items_payment import get_prices, POST_REG_SHIPPING, POST_FAST_SHIPPING, PICKUP_SHIPPING
 from loader import dp, db, bot
 
 from filters import AdminFilter
@@ -15,21 +17,74 @@ from keyboards.inline.item import buy_keyboard
 from utils.notify_admins import ref_notify
 
 
-# /START FROM INLINE MODE WITH SELECTED ITEM DESCRIPTION
+# TEST INVOICES ------------------
+
 @dp.message_handler(CommandStart(deep_link="show"), state="showing")
-async def show_item(message: types.Message, state: FSMContext):
+async def show_invoice(message: types.Message, state: FSMContext):
+    if PROVIDER_TOKEN.split(':')[1] == 'TEST':
+        await message.answer('test invoice')
+
     data = await state.get_data()
     item_id = data.get("id")
     item = db.select_item(id=item_id)
-    text = "<b>{name}</b>\n<i>{description}</i>\n<b>Цена:</b> \t{price:,}"
-    await message.answer_photo(
-            photo=item[2],
-            caption=text.format(name=item[1],
-                                description=item[3],
-                                price=item[4]/100),
-            reply_markup=buy_keyboard(item_id)
+    await bot.send_invoice(
+        message.chat.id,
+        title=item[1],
+        description=item[3],
+        provider_token=PROVIDER_TOKEN,
+        currency='uah',
+        photo_url=item[5],
+        photo_height=412,  # !=0/None, иначе изображение не покажется
+        photo_width=412,
+        photo_size=412,
+        is_flexible=True,  # True если конечная цена зависит от способа доставки
+        prices=get_prices(item[1], item[4]),
+        start_parameter=f"str_prm_{item_id}",
+        payload=f'invoice_{item_id}'
     )
     await state.finish()
+
+
+@dp.shipping_query_handler()
+async def choose_shipping(query: types.ShippingQuery):
+    if query.shipping_address.country_code == "UA":
+        await bot.answer_shipping_query(shipping_query_id=query.id,
+                                        shipping_options=[
+                                            POST_REG_SHIPPING,
+                                            POST_FAST_SHIPPING,
+                                            PICKUP_SHIPPING
+                                        ],
+                                        ok=True)
+    else:
+        await bot.answer_shipping_query(shipping_query_id=query.id,
+                                        shipping_options=[
+                                            POST_REG_SHIPPING,
+                                            POST_FAST_SHIPPING
+                                        ],
+                                        ok=True)
+
+
+@dp.pre_checkout_query_handler()
+async def process_pre_checkout_query(query: types.PreCheckoutQuery):
+    await bot.answer_pre_checkout_query(pre_checkout_query_id=query.id,
+                                        ok=True)
+    await bot.send_message(chat_id=query.from_user.id, text="Спасибо за покупку!")
+
+# /START FROM INLINE MODE WITH SELECTED ITEM DESCRIPTION
+# @dp.message_handler(CommandStart(deep_link="show"), state="showing")
+# async def show_item(message: types.Message, state: FSMContext):
+#     data = await state.get_data()
+#     item_id = data.get("id")
+#     item = db.select_item(id=item_id)
+#     text = "<b>{name}</b>\n\n<i>{description}</i>\n\n<b>Цена:</b> \t{price:,}"
+#     await message.answer_photo(
+#             photo=item[2],
+#             caption=text.format(name=item[1],
+#                                 description=item[3],
+#                                 price=item[4]/100),
+#             reply_markup=buy_keyboard(item_id)
+#     )
+#     await state.finish()
 
 
 # /START FOR ADMIN

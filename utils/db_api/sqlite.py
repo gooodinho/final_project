@@ -127,14 +127,15 @@ class Database:
         name varchar(255) NOT NULL,
         photo varchar(255) NOT NULL,
         description varchar(255),
-        price INTEGER NOT NULL
+        price INTEGER NOT NULL,
+        url varchar(255)
         );
         """
         self.execute(sql, commit=True)
 
-    def add_item(self, name: str, photo: str, price: int, description: str = None):
-        parameters = (name, photo, description, price)
-        sql = "INSERT INTO Items(name, photo, description, price) VALUES (?, ?, ?, ?)"
+    def add_item(self, name: str, photo: str, price: int, description: str = None, url: str = None):
+        parameters = (name, photo, description, price, url)
+        sql = "INSERT INTO Items(name, photo, description, price, url) VALUES (?, ?, ?, ?, ?)"
         try:
             self.execute(sql, parameters, commit=True)
         except Exception as e:

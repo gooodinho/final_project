@@ -1,11 +1,9 @@
 from aiogram import types
 from aiogram.types import CallbackQuery
-from aiogram.utils.callback_data import CallbackData
 from aiogram.dispatcher import FSMContext
 
+from keyboards.inline.item import show_keyboard, show_item
 from loader import dp, db
-
-show_item = CallbackData("show", "id")
 
 
 @dp.inline_handler(text="")
@@ -25,20 +23,21 @@ async def empty_query(query: types.InlineQuery):
     for item in items:
         id = item[0]
         name = item[1]
-        photo_id = item[2]
-        description = item[3]
+        # photo_id = item[2]
+        # description = item[3]
         price = item[4]/100
-        text = f"<b>{name}</b>\n<i>{description}</i>\n<b>Цена:</b> \t{price:,}"
-        markup = types.InlineKeyboardMarkup(
-            inline_keyboard=[
-                [types.InlineKeyboardButton(
-                    text="Показать товар",
-                    callback_data=show_item.new(id=id)
-                )]
-            ]
-        )
-        res.append(types.InlineQueryResultCachedPhoto(id=id, photo_file_id=photo_id, caption=text,
-                                                      parse_mode="HTML", reply_markup=markup))
+        url = item[5]
+        inline_text = f"Цена:\t{price}"
+        text = f"<b>{name}</b>\n\n<b>Цена:</b> \t{price:,}"
+        # res.append(types.InlineQueryResultCachedPhoto(id=id, photo_file_id=photo_id, caption=text,
+        #                                               parse_mode="HTML", reply_markup=show_keyboard(id)))
+        res.append(types.InlineQueryResultArticle(id=id, title=name,
+                                                  input_message_content=types.InputTextMessageContent(
+                                                      message_text=text
+                                                  ),
+                                                  reply_markup=show_keyboard(id),
+                                                  description=inline_text,
+                                                  thumb_url=url))
     await query.answer(
         results=res,
         cache_time=5
@@ -65,20 +64,27 @@ async def some_query(query: types.InlineQuery):
         for item in items:
             id = item[0]
             name = item[1]
-            photo_id = item[2]
+            # photo_id = item[2]
+            url = item[5]
             description = item[3]
             price = item[4]/100
-            text = f"<b>{name}</b>\n<i>{description}</i>\n<b>Цена:</b> \t{price:,}"
-            markup = types.InlineKeyboardMarkup(
-                inline_keyboard=[
-                    [types.InlineKeyboardButton(
-                        text="Показать товар",
-                        callback_data=show_item.new(id=id)
-                    )]
-                ]
-            )
-            res.append(types.InlineQueryResultCachedPhoto(id=id, photo_file_id=photo_id, caption=text,
-                                                          parse_mode="HTML", reply_markup=markup))
+            inline_text = f"Цена:\t{price}"
+            text = f"<b>{name}</b>\n\n<i>{description}</i>\n\n<b>Цена:</b> \t{price:,}"
+            # markup = types.InlineKeyboardMarkup(
+            #     inline_keyboard=[
+            #         [types.InlineKeyboardButton(
+            #             text="Показать товар",
+            #             callback_data=show_item.new(id=id)
+            #         )]
+            #     ]
+            # )
+            res.append(types.InlineQueryResultArticle(id=id, title=name,
+                                                      input_message_content=types.InputTextMessageContent(
+                                                          message_text=text
+                                                      ),
+                                                      reply_markup=show_keyboard(id),
+                                                      description=inline_text,
+                                                      thumb_url=url))
         await query.answer(
             results=res,
             cache_time=5
