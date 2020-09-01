@@ -1,4 +1,5 @@
 from loader import db
+from utils.set_commands import set_default_commands
 
 
 async def on_startup(dp):
@@ -16,7 +17,7 @@ async def on_startup(dp):
         db.create_item_table()
     except Exception as e:
         print(e)
-
+    await set_default_commands(dp)
     print(db.select_all_items())
     print(db.select_all_users())
     await admin_notify(dp, "Бот запущен!")
